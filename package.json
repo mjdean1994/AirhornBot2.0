@@ -1,0 +1,20 @@
+{
+  "name": "airhorn-bot",
+  "version": "0.1.0",
+  "description": "A Discord bot that plays audio clips in the user's voice channel on command.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mjdean1994/AirhornBot2.0.git"
+  },
+  "author": "mjdean1994",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mjdean1994/AirhornBot2.0/issues"
+  },
+  "homepage": "https://github.com/mjdean1994/AirhornBot2.0#readme"
+}
