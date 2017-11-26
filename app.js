@@ -4,17 +4,17 @@ const sounds = require("./lib/sounds.js");
 
 const config = require("./config.json");
 
-var client = discord.Client();
-client.login(config.discordToken);
+var client = new discord.Client();
+client.login(config.token);
 
 client.on("ready", function () {
     console.log("Airhorn Bot is ready to blow!");
-    client.uesr.setGame("Airhorn");
+    client.user.setGame("Airhorn");
 });
 
 client.on("message", message => {
     // Ignore all messages that don't begin with bot prefix
-    if (!message.startsWith(config.prefix)) return;
+    if (!message.content.startsWith(config.prefix)) return;
 
     if (!message.channel instanceof discord.TextChannel) {
         message.channel.send("Whoa! Don't slide into my DMs. I only work on servers.");
@@ -22,7 +22,7 @@ client.on("message", message => {
     }
 
     // Split bot command into primary command and arguments, excluding prefix
-    var args = message.content.slice(config.prefix.length).trim().split(/ + /g);
+    var args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     var command = args.shift().toLowerCase();
 
     if (command === "save") {
@@ -59,8 +59,11 @@ client.on("message", message => {
                         return;
                     default:
                         message.channel.send("I got an error and I don't know how to handle it! Please report this to mjdean1994@gmail.com!\n\nError:```" + JSON.stringify(err) + "```");
+                        return;
                 }
             }
+
+            message.channel.send("Alright, I've added that sound! Try it out with `!" + args[0] + "`.");
         });
     }
     else if (command === "delete") {
@@ -68,9 +71,10 @@ client.on("message", message => {
         return;
     }
     else if (command === "init") {
-        sounds.initializeDefaultSounds(message.server.id, err => {
+        sounds.initializeDefaultSounds(message.guild.id, err => {
             if (err) {
                 message.channel.send(err);
+                return;
             }
             else {
                 message.channel.send("Airhorn Bot initialized for this server. Try `!airhorn` now!");
@@ -83,9 +87,10 @@ client.on("message", message => {
 
         if (!voiceChannel) {
             message.channel.send("You're not in a voice channel, " + message.member.displayName + ". I don't know where to go.");
+            return;
         }
 
-        sounds.getSoundPath(message.server.id, command, function (path, err) {
+        sounds.getSoundPath(message.guild.id, command, function (path, err) {
             // Fail silently if we can't find the sound...user might not have been trying to play one.
             if (err) return;
 
