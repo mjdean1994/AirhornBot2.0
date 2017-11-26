@@ -1,5 +1,6 @@
 const discord = require("discord.js");
 
+const player = require("./lib/player.js");
 const sounds = require("./lib/sounds.js");
 
 const config = require("./config.json");
@@ -16,7 +17,14 @@ client.on("message", message => {
     // Ignore all messages that don't begin with bot prefix
     if (!message.content.startsWith(config.prefix)) return;
 
-    if (!message.channel instanceof discord.TextChannel) {
+    //because fuck Chase
+    if(message.member && (message.member.displayName == "Gathragg" || message.member.user.username == "Ddraig Goch"))
+    {
+        message.channel.send("Fuck off, Chase.");
+        return;
+    }
+
+    if (message.guild == null) {
         message.channel.send("Whoa! Don't slide into my DMs. I only work on servers.");
         return;
     }
@@ -43,7 +51,7 @@ client.on("message", message => {
             return;
         }
 
-        if (args[0] in ["save", "init"]) {
+        if (args[0] in ["save", "init", "list", "delete", "kill"]) {
             message.channel.send("The name you specified for that sound is a reserved word. Try a different one.");
             return;
         }
@@ -66,9 +74,48 @@ client.on("message", message => {
             message.channel.send("Alright, I've added that sound! Try it out with `!" + args[0] + "`.");
         });
     }
-    else if (command === "delete") {
-        message.channel.send("Delete functionality isn't implemented yet. If you've seen this message for a while, try giving my developer a nudge at mjdean1994@gmail.com.");
-        return;
+    else if (command === "list") {
+        var msg = "Current Airhorn Sounds:";
+
+        sounds.getList(message.guild.id, function(list) {
+            for(var i = 0; i < list.length; i++)
+            {
+                msg += "\n- " + list[i];
+            }
+
+            message.channel.send(msg);
+        });
+    }
+    else if(command === "kill")
+    {
+        player.kill(function(success) {
+            if(!success)
+            {
+                message.channel.send("I'm not playing anything at the moment!");
+            }
+            else
+            {
+                message.channel.send("Well fine. I didn't like you, anyways. :cry:");
+            }
+        });
+    }
+    else if(command === "delete")
+    {
+        if(args.length <= 0)
+        {
+            message.channel.send("You need to tell me what you want deleted.\n\nUsage:```!delete {name}```");
+            return;
+        }
+
+        sounds.deleteSound(message.guild.id, args[0], function(err){
+            if(err)
+            {
+                message.channel.send("I wasn't able to find that sound file. Are you sure that's the right name? You can do `!list` to see what sounds exist right now.");
+                return;
+            }
+
+            message.channel.send("Alright, I've deleted `!" + [args] + "` forever. Don't worry, if you change your mind, you can always add it again!");
+        })
     }
     else if (command === "init") {
         sounds.initializeDefaultSounds(message.guild.id, err => {
@@ -94,14 +141,7 @@ client.on("message", message => {
             // Fail silently if we can't find the sound...user might not have been trying to play one.
             if (err) return;
 
-            // Join voice channel and play the sound!
-            voiceChannel.join().then(connection => {
-                var dispatcher = connection.playFile(path);
-
-                dispatcher.on("end", end => {
-                    voiceChannel.leave();
-                })
-            });
+            player.add(path, voiceChannel);
         });
     }
 });
